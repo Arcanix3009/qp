@@ -129,8 +129,8 @@ function shuffle(array) {
   return array;
 }
 
+// Assign seats
 function assignSeats() {
-
   const input = document.getElementById("names").value.trim();
   if (!input) {
     alert("Enter student names first.");
@@ -139,8 +139,8 @@ function assignSeats() {
 
   let names = input.split("\n").map(n => n.trim()).filter(n => n);
 
-  if (names.length < 29) {
-    alert("Need at least 29 students.");
+  if (names.length < 42) {
+    alert("Need at least 42 students.");
     return;
   }
 
@@ -149,46 +149,55 @@ function assignSeats() {
     return;
   }
 
-  // Get line 18 and 29 (index 17 & 28)
-  const studentA = names[17];
-  const studentB = names[28];
+  // Special trio: 20, 23, 42 (indexes)
+  const student20 = names[19];
+  const student23 = names[22];
+  const student42 = names[41];
 
-  // Remove them (remove higher index first)
-  names.splice(28, 1);
-  names.splice(17, 1);
+  // Remove highest index first
+  names.splice(41, 1);
+  names.splice(22, 1);
+  names.splice(19, 1);
 
-  // Clear seats
+  // Clear all seats
   seatElements.forEach(seat => {
     seat.textContent = "";
     seat.classList.remove("filled");
   });
 
-  // Find adjacent seat pairs (same block only)
-  let adjacentPairs = [];
-
-  for (let i = 0; i < seatElements.length - 1; i++) {
-    if (seatElements[i].parentElement === seatElements[i+1].parentElement) {
-      adjacentPairs.push([i, i+1]);
+  // Find all 3-seat blocks
+  let threeSeatBlocks = [];
+  seatElements.forEach((seat, index) => {
+    const parent = seat.parentElement;
+    if (parent.classList.contains("block-3")) {
+      const seatsInBlock = Array.from(parent.children);
+      const indexes = seatsInBlock.map(s => seatElements.indexOf(s));
+      if (!threeSeatBlocks.some(b => b[0] === indexes[0])) {
+        threeSeatBlocks.push(indexes);
+      }
     }
-  }
+  });
 
-  // Pick random adjacent pair
-  const randomPair = adjacentPairs[Math.floor(Math.random() * adjacentPairs.length)];
+  // Pick random 3-seat block
+  const randomBlock = threeSeatBlocks[Math.floor(Math.random() * threeSeatBlocks.length)];
 
-  // Place fixed pair
-  seatElements[randomPair[0]].textContent = studentA;
-  seatElements[randomPair[1]].textContent = studentB;
-  seatElements[randomPair[0]].classList.add("filled");
-  seatElements[randomPair[1]].classList.add("filled");
+  // Shuffle trio order
+  const trio = shuffle([student20, student23, student42]);
 
-  // Remaining seat indexes
+  // Place trio
+  randomBlock.forEach((seatIndex, i) => {
+    seatElements[seatIndex].textContent = trio[i];
+    seatElements[seatIndex].classList.add("filled");
+  });
+
+  // Remaining seats
   let remainingIndexes = seatElements
     .map((_, i) => i)
-    .filter(i => i !== randomPair[0] && i !== randomPair[1]);
+    .filter(i => !randomBlock.includes(i));
 
   shuffle(remainingIndexes);
 
-  // Place remaining students
+  // Fill remaining students
   names.forEach((name, index) => {
     const seatIndex = remainingIndexes[index];
     seatElements[seatIndex].textContent = name;
