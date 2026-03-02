@@ -74,7 +74,6 @@ button:hover {
   font-size: 10px;
   text-align: center;
   padding: 3px;
-  transition: 0.2s;
 }
 
 .filled {
@@ -98,8 +97,8 @@ button:hover {
 <script>
 const classroomDiv = document.getElementById("classroom");
 let seatElements = [];
+let seatMap = []; // track seat row/col
 
-// Final layout
 const layouts = [
   [2,3,3,2],
   [2,3,3,2],
@@ -109,7 +108,7 @@ const layouts = [
 ];
 
 // Build classroom
-layouts.forEach(rowLayout => {
+layouts.forEach((rowLayout, rowIndex) => {
   const row = document.createElement("div");
   row.className = "row";
 
@@ -122,6 +121,7 @@ layouts.forEach(rowLayout => {
       seat.className = "seat";
       block.appendChild(seat);
       seatElements.push(seat);
+      seatMap.push({row: rowIndex, blockSize: size, block: block});
     }
 
     row.appendChild(block);
@@ -130,7 +130,6 @@ layouts.forEach(rowLayout => {
   classroomDiv.appendChild(row);
 });
 
-// Fisher-Yates shuffle
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -139,7 +138,6 @@ function shuffle(array) {
   return array;
 }
 
-// Fully fair seat assignment
 function assignSeats() {
   const input = document.getElementById("names").value.trim();
   if (!input) {
@@ -150,7 +148,7 @@ function assignSeats() {
   let names = input.split("\n").map(n => n.trim()).filter(n => n);
 
   if (names.length > seatElements.length) {
-    alert("Too many students! Max seats: " + seatElements.length);
+    alert("Too many students!");
     return;
   }
 
@@ -160,12 +158,105 @@ function assignSeats() {
     seat.classList.remove("filled");
   });
 
-  shuffle(names);
-  let shuffledSeats = shuffle([...seatElements]);
+  // Get special students
+  const s2 = names[1];
+  const s13 = names[12];
+  const s20 = names[19];
+  const s23 = names[22];
+  const s41 = names[40];
 
-  names.forEach((name, index) => {
-    shuffledSeats[index].textContent = name;
-    shuffledSeats[index].classList.add("filled");
+  // Remove them from pool (highest index first)
+  [40,22,19,12,1].sort((a,b)=>b-a).forEach(i=>{
+    if(names[i]) names.splice(i,1);
+  });
+
+  let availableSeats = [...seatElements];
+
+  // 1️⃣ Seat 2 must be in 4-seat block (last row middle block)
+  const fourBlockSeats = seatElements.filter((seat, i) =>
+    seatMap[i].row === 4 && seatMap[i].blockSize === 4
+  );
+
+  shuffle(fourBlockSeats);
+  let seat2Spot = fourBlockSeats[0];
+
+  seat2Spot.textContent = s2;
+  seat2Spot.classList.add("filled");
+  availableSeats = availableSeats.filter(s => s !== seat2Spot);
+
+  // 2️⃣ Pair 41 and 20 side by side
+  shuffle(availableSeats);
+
+  let pairSpot1 = null;
+  let pairSpot2 = null;
+
+  for (let i = 0; i < availableSeats.length; i++) {
+    const parent = availableSeats[i].parentElement;
+    const siblings = Array.from(parent.children);
+    const idx = siblings.indexOf(availableSeats[i]);
+
+    if (idx < siblings.length - 1) {
+      pairSpot1 = availableSeats[i];
+      pairSpot2 = siblings[idx+1];
+      break;
+    }
+  }
+
+  pairSpot1.textContent = s41;
+  pairSpot2.textContent = s20;
+  pairSpot1.classList.add("filled");
+  pairSpot2.classList.add("filled");
+
+  availableSeats = availableSeats.filter(s => s !== pairSpot1 && s !== pairSpot2);
+
+  // 3️⃣ Seat 23 behind them (same column next row)
+  const pairRow = seatMap[seatElements.indexOf(pairSpot1)].row;
+  const pairBlock = pairSpot1.parentElement;
+  const pairIndex = Array.from(pairBlock.children).indexOf(pairSpot1);
+
+  let behindSeat = null;
+
+  for (let i = 0; i < seatElements.length; i++) {
+    if (
+      seatMap[i].row === pairRow + 1 &&
+      seatElements[i].parentElement === pairBlock &&
+      Array.from(pairBlock.children).indexOf(seatElements[i]) === pairIndex
+    ) {
+      behindSeat = seatElements[i];
+      break;
+    }
+  }
+
+  if (behindSeat) {
+    behindSeat.textContent = s23;
+    behindSeat.classList.add("filled");
+    availableSeats = availableSeats.filter(s => s !== behindSeat);
+  }
+
+  // 4️⃣ Prevent seat 13 next to seat 2
+  const seat2Parent = seat2Spot.parentElement;
+  const seat2Siblings = Array.from(seat2Parent.children);
+  const seat2Index = seat2Siblings.indexOf(seat2Spot);
+
+  let forbiddenSeats = [];
+  if (seat2Index > 0) forbiddenSeats.push(seat2Siblings[seat2Index - 1]);
+  if (seat2Index < seat2Siblings.length - 1) forbiddenSeats.push(seat2Siblings[seat2Index + 1]);
+
+  availableSeats = availableSeats.filter(s => !forbiddenSeats.includes(s));
+
+  // Place seat 13 somewhere allowed
+  let seat13Spot = shuffle(availableSeats)[0];
+  seat13Spot.textContent = s13;
+  seat13Spot.classList.add("filled");
+  availableSeats = availableSeats.filter(s => s !== seat13Spot);
+
+  // 5️⃣ Fill remaining randomly
+  shuffle(names);
+  names.forEach((name, i) => {
+    if (availableSeats[i]) {
+      availableSeats[i].textContent = name;
+      availableSeats[i].classList.add("filled");
+    }
   });
 }
 </script>
