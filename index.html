@@ -99,8 +99,9 @@ button:hover {
 const classroomDiv = document.getElementById("classroom");
 let seatElements = [];
 
-// Layout definition
+// Final layout
 const layouts = [
+  [2,3,3,2],
   [2,3,3,2],
   [2,3,3,2],
   [2,3,3,2],
@@ -138,7 +139,7 @@ function shuffle(array) {
   return array;
 }
 
-// Fair random assignment
+// Fully fair seat assignment
 function assignSeats() {
   const input = document.getElementById("names").value.trim();
   if (!input) {
