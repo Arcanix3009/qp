@@ -61,6 +61,7 @@ button:hover {
 
 .block-2 { grid-template-columns: repeat(2, 50px); }
 .block-3 { grid-template-columns: repeat(3, 50px); }
+.block-4 { grid-template-columns: repeat(4, 50px); }
 
 .seat {
   width: 50px;
@@ -96,15 +97,22 @@ button:hover {
 
 <script>
 const classroomDiv = document.getElementById("classroom");
-const layout = [2,3,3,2];
 let seatElements = [];
 
-// Build classroom layout
-for (let r = 0; r < 5; r++) {
+// Layout definition
+const layouts = [
+  [2,3,3,2],
+  [2,3,3,2],
+  [2,3,3,2],
+  [2,4,2]
+];
+
+// Build classroom
+layouts.forEach(rowLayout => {
   const row = document.createElement("div");
   row.className = "row";
 
-  layout.forEach(size => {
+  rowLayout.forEach(size => {
     const block = document.createElement("div");
     block.className = "block block-" + size;
 
@@ -119,9 +127,9 @@ for (let r = 0; r < 5; r++) {
   });
 
   classroomDiv.appendChild(row);
-}
+});
 
-// Shuffle function (Fisher-Yates)
+// Fisher-Yates shuffle
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -130,7 +138,7 @@ function shuffle(array) {
   return array;
 }
 
-// Fully fair seat assignment
+// Fair random assignment
 function assignSeats() {
   const input = document.getElementById("names").value.trim();
   if (!input) {
@@ -145,19 +153,15 @@ function assignSeats() {
     return;
   }
 
-  // Clear all seats
+  // Clear seats
   seatElements.forEach(seat => {
     seat.textContent = "";
     seat.classList.remove("filled");
   });
 
-  // Shuffle names
   shuffle(names);
-
-  // Shuffle seat order
   let shuffledSeats = shuffle([...seatElements]);
 
-  // Assign randomly
   names.forEach((name, index) => {
     shuffledSeats[index].textContent = name;
     shuffledSeats[index].classList.add("filled");
