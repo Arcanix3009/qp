@@ -113,7 +113,7 @@ const layouts = [
   [2,4,2]
 ];
 
-// Build classroom
+// Build classroom with seat numbers
 layouts.forEach(rowLayout => {
   const row = document.createElement("div");
   row.className = "row";
@@ -161,52 +161,66 @@ function assignSeats() {
     return;
   }
 
-  // Clear seats but keep numbers
+  // Reset seats (keep numbers)
   seatElements.forEach(seat => {
     seat.innerHTML = "<small>" + seat.dataset.number + "</small>";
     seat.classList.remove("filled");
   });
 
-  // Get special pair (based on list position)
-  const s41 = names[40];
-  const s20 = names[19];
+  // Make a copy to safely modify
+  let pool = [...names];
 
-  // Remove them from pool (higher index first)
-  [40,19].sort((a,b)=>b-a).forEach(i=>{
-    if(names[i]) names.splice(i,1);
-  });
+  let s41 = null;
+  let s20 = null;
+
+  // Extract special students safely
+  if (pool.length >= 41) {
+    s41 = pool[40];
+    pool.splice(40, 1);
+  }
+
+  if (pool.length >= 20) {
+    s20 = pool[19];
+    pool.splice(19, 1);
+  }
 
   let availableSeats = [...seatElements];
   shuffle(availableSeats);
 
-  // Find two side-by-side seats
-  let pairSpot1 = null;
-  let pairSpot2 = null;
+  // Only force pair if both exist
+  if (s41 && s20) {
+    let pairSpot1 = null;
+    let pairSpot2 = null;
 
-  for (let seat of availableSeats) {
-    const parent = seat.parentElement;
-    const siblings = Array.from(parent.children);
-    const idx = siblings.indexOf(seat);
+    for (let seat of availableSeats) {
+      const parent = seat.parentElement;
+      const siblings = Array.from(parent.children);
+      const idx = siblings.indexOf(seat);
 
-    if (idx < siblings.length - 1 && availableSeats.includes(siblings[idx+1])) {
-      pairSpot1 = seat;
-      pairSpot2 = siblings[idx+1];
-      break;
+      if (idx < siblings.length - 1 && availableSeats.includes(siblings[idx+1])) {
+        pairSpot1 = seat;
+        pairSpot2 = siblings[idx+1];
+        break;
+      }
+    }
+
+    if (pairSpot1 && pairSpot2) {
+      pairSpot1.innerHTML = "<small>" + pairSpot1.dataset.number + "</small><br>" + s41;
+      pairSpot2.innerHTML = "<small>" + pairSpot2.dataset.number + "</small><br>" + s20;
+
+      pairSpot1.classList.add("filled");
+      pairSpot2.classList.add("filled");
+
+      availableSeats = availableSeats.filter(
+        s => s !== pairSpot1 && s !== pairSpot2
+      );
     }
   }
 
-  if (pairSpot1 && pairSpot2) {
-    pairSpot1.innerHTML = "<small>" + pairSpot1.dataset.number + "</small><br>" + s41;
-    pairSpot2.innerHTML = "<small>" + pairSpot2.dataset.number + "</small><br>" + s20;
-    pairSpot1.classList.add("filled");
-    pairSpot2.classList.add("filled");
+  // Fill everyone else randomly
+  shuffle(pool);
 
-    availableSeats = availableSeats.filter(s => s !== pairSpot1 && s !== pairSpot2);
-  }
-
-  // Fill remaining randomly
-  shuffle(names);
-  names.forEach((name, i) => {
+  pool.forEach((name, i) => {
     if (availableSeats[i]) {
       availableSeats[i].innerHTML =
         "<small>" + availableSeats[i].dataset.number + "</small><br>" + name;
