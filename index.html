@@ -61,7 +61,6 @@ button:hover {
 
 .block-2 { grid-template-columns: repeat(2, 50px); }
 .block-3 { grid-template-columns: repeat(3, 50px); }
-.block-4 { grid-template-columns: repeat(4, 50px); }
 
 .seat {
   width: 50px;
@@ -105,12 +104,13 @@ const classroomDiv = document.getElementById("classroom");
 let seatElements = [];
 let seatCounter = 1;
 
+// NEW layout
 const layouts = [
   [2,3,3,2],
   [2,3,3,2],
   [2,3,3,2],
   [2,3,3,2],
-  [2,4,2]
+  [2,2,2,2]
 ];
 
 // Build classroom
@@ -161,57 +161,19 @@ function assignSeats() {
     return;
   }
 
-  // Clear seats but keep numbers
+  // Clear seats
   seatElements.forEach(seat => {
     seat.innerHTML = "<small>" + seat.dataset.number + "</small>";
     seat.classList.remove("filled");
   });
 
-  // Get special pair (based on list position)
-  const s41 = names[40];
-  const s20 = names[19];
+  let shuffledSeats = shuffle([...seatElements]);
+  let shuffledNames = shuffle([...names]);
 
-  // Remove them from pool (higher index first)
-  [40,19].sort((a,b)=>b-a).forEach(i=>{
-    if(names[i]) names.splice(i,1);
-  });
-
-  let availableSeats = [...seatElements];
-  shuffle(availableSeats);
-
-  // Find two side-by-side seats
-  let pairSpot1 = null;
-  let pairSpot2 = null;
-
-  for (let seat of availableSeats) {
-    const parent = seat.parentElement;
-    const siblings = Array.from(parent.children);
-    const idx = siblings.indexOf(seat);
-
-    if (idx < siblings.length - 1 && availableSeats.includes(siblings[idx+1])) {
-      pairSpot1 = seat;
-      pairSpot2 = siblings[idx+1];
-      break;
-    }
-  }
-
-  if (pairSpot1 && pairSpot2) {
-    pairSpot1.innerHTML = "<small>" + pairSpot1.dataset.number + "</small><br>" + s41;
-    pairSpot2.innerHTML = "<small>" + pairSpot2.dataset.number + "</small><br>" + s20;
-    pairSpot1.classList.add("filled");
-    pairSpot2.classList.add("filled");
-
-    availableSeats = availableSeats.filter(s => s !== pairSpot1 && s !== pairSpot2);
-  }
-
-  // Fill remaining randomly
-  shuffle(names);
-  names.forEach((name, i) => {
-    if (availableSeats[i]) {
-      availableSeats[i].innerHTML =
-        "<small>" + availableSeats[i].dataset.number + "</small><br>" + name;
-      availableSeats[i].classList.add("filled");
-    }
+  shuffledNames.forEach((name, i) => {
+    shuffledSeats[i].innerHTML =
+      "<small>" + shuffledSeats[i].dataset.number + "</small><br>" + name;
+    shuffledSeats[i].classList.add("filled");
   });
 }
 </script>
