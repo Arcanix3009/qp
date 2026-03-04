@@ -45,12 +45,12 @@ button:hover {
   margin-top: 30px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .row {
   display: flex;
-  gap: 14px;
+  gap: 24px; /* more space between blocks */
   justify-content: center;
 }
 
@@ -104,7 +104,16 @@ const classroomDiv = document.getElementById("classroom");
 let seatElements = [];
 let seatCounter = 1;
 
-// NEW layout
+/*
+Exact Layout:
+
+Row 1–4:
+ss  sss  sss  ss
+
+Row 5:
+ss  ss  ss  ss
+*/
+
 const layouts = [
   [2,3,3,2],
   [2,3,3,2],
@@ -113,7 +122,6 @@ const layouts = [
   [2,2,2,2]
 ];
 
-// Build classroom
 layouts.forEach(rowLayout => {
   const row = document.createElement("div");
   row.className = "row";
@@ -161,7 +169,6 @@ function assignSeats() {
     return;
   }
 
-  // Clear seats
   seatElements.forEach(seat => {
     seat.innerHTML = "<small>" + seat.dataset.number + "</small>";
     seat.classList.remove("filled");
