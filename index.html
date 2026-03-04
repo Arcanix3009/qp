@@ -103,6 +103,7 @@ button:hover {
 <script>
 const classroomDiv = document.getElementById("classroom");
 let seatElements = [];
+let seatMap = [];
 let seatCounter = 1;
 
 const layouts = [
@@ -113,8 +114,8 @@ const layouts = [
   [2,4,2]
 ];
 
-// Build classroom with seat numbers
-layouts.forEach(rowLayout => {
+// Build classroom with seat tracking
+layouts.forEach((rowLayout, rowIndex) => {
   const row = document.createElement("div");
   row.className = "row";
 
@@ -131,6 +132,7 @@ layouts.forEach(rowLayout => {
 
       block.appendChild(seat);
       seatElements.push(seat);
+      seatMap.push({ row: rowIndex, block: block });
     }
 
     row.appendChild(block);
@@ -161,19 +163,18 @@ function assignSeats() {
     return;
   }
 
-  // Reset seats (keep numbers)
+  // Reset seats
   seatElements.forEach(seat => {
     seat.innerHTML = "<small>" + seat.dataset.number + "</small>";
     seat.classList.remove("filled");
   });
 
-  // Make a copy to safely modify
   let pool = [...names];
 
   let s41 = null;
   let s20 = null;
+  let s23 = null;
 
-  // Extract special students safely
   if (pool.length >= 41) {
     s41 = pool[40];
     pool.splice(40, 1);
@@ -184,14 +185,19 @@ function assignSeats() {
     pool.splice(19, 1);
   }
 
+  if (pool.length >= 23) {
+    s23 = pool[22];
+    pool.splice(22, 1);
+  }
+
   let availableSeats = [...seatElements];
   shuffle(availableSeats);
 
-  // Only force pair if both exist
-  if (s41 && s20) {
-    let pairSpot1 = null;
-    let pairSpot2 = null;
+  let pairSpot1 = null;
+  let pairSpot2 = null;
 
+  // Place pair
+  if (s41 && s20) {
     for (let seat of availableSeats) {
       const parent = seat.parentElement;
       const siblings = Array.from(parent.children);
@@ -217,7 +223,35 @@ function assignSeats() {
     }
   }
 
-  // Fill everyone else randomly
+  // Place #23 behind pairSpot1
+  if (s23 && pairSpot1) {
+    const pairIndex = seatElements.indexOf(pairSpot1);
+    const pairRow = seatMap[pairIndex].row;
+    const pairBlock = seatMap[pairIndex].block;
+    const columnIndex = Array.from(pairBlock.children).indexOf(pairSpot1);
+
+    let behindSeat = null;
+
+    seatElements.forEach((seat, i) => {
+      if (
+        seatMap[i].row === pairRow + 1 &&
+        seatMap[i].block === pairBlock &&
+        Array.from(pairBlock.children).indexOf(seat) === columnIndex
+      ) {
+        behindSeat = seat;
+      }
+    });
+
+    if (behindSeat && availableSeats.includes(behindSeat)) {
+      behindSeat.innerHTML =
+        "<small>" + behindSeat.dataset.number + "</small><br>" + s23;
+      behindSeat.classList.add("filled");
+
+      availableSeats = availableSeats.filter(s => s !== behindSeat);
+    }
+  }
+
+  // Fill rest randomly
   shuffle(pool);
 
   pool.forEach((name, i) => {
