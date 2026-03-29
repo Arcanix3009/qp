@@ -50,7 +50,7 @@ button:hover {
 
 .row {
   display: flex;
-  gap: 24px;
+  gap: 24px; /* more space between blocks */
   justify-content: center;
 }
 
@@ -104,13 +104,22 @@ const classroomDiv = document.getElementById("classroom");
 let seatElements = [];
 let seatCounter = 1;
 
-// Layout (now 42 seats)
+/*
+Exact Layout:
+
+Row 1–4:
+ss  sss  sss  ss
+
+Row 5:
+ss  ss  ss  ss
+*/
+
 const layouts = [
   [2,3,3,2],
   [2,3,3,2],
   [2,3,3,2],
   [2,3,3,2],
-  [2,2,2,2,2]
+  [2,2,2,2]
 ];
 
 layouts.forEach(rowLayout => {
@@ -121,43 +130,15 @@ layouts.forEach(rowLayout => {
     const block = document.createElement("div");
     block.className = "block block-" + size;
 
-    // 🔥 FORCE seat 20 + 42 together
-    if (seatCounter === 20) {
-      const seat20 = document.createElement("div");
-      seat20.className = "seat";
-      seat20.dataset.number = 20;
-      seat20.innerHTML = "<small>20</small>";
-
-      const seat42 = document.createElement("div");
-      seat42.className = "seat";
-      seat42.dataset.number = 42;
-      seat42.innerHTML = "<small>42</small>";
-
-      block.appendChild(seat20);
-      block.appendChild(seat42);
-
-      seatElements.push(seat20, seat42);
-
-      seatCounter = 21; // skip 20
-      row.appendChild(block);
-      return;
-    }
-
     for (let i = 0; i < size; i++) {
-      // skip 42 (already placed)
-      if (seatCounter === 42) {
-        seatCounter++;
-      }
-
       const seat = document.createElement("div");
       seat.className = "seat";
       seat.dataset.number = seatCounter;
       seat.innerHTML = "<small>" + seatCounter + "</small>";
+      seatCounter++;
 
       block.appendChild(seat);
       seatElements.push(seat);
-
-      seatCounter++;
     }
 
     row.appendChild(block);
@@ -166,7 +147,6 @@ layouts.forEach(rowLayout => {
   classroomDiv.appendChild(row);
 });
 
-// shuffle
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -175,7 +155,6 @@ function shuffle(array) {
   return array;
 }
 
-// assign
 function assignSeats() {
   const input = document.getElementById("names").value.trim();
   if (!input) {
@@ -190,7 +169,6 @@ function assignSeats() {
     return;
   }
 
-  // reset
   seatElements.forEach(seat => {
     seat.innerHTML = "<small>" + seat.dataset.number + "</small>";
     seat.classList.remove("filled");
@@ -209,4 +187,3 @@ function assignSeats() {
 
 </body>
 </html>
-```
