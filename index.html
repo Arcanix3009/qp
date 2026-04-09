@@ -22,7 +22,7 @@ layouts.forEach(rowLayout => {
     for (let i = 0; i < size; i++) {
       const seat = document.createElement("div");
       seat.className = "seat";
-      seat.dataset.number = seatCounter; // 原始顺序编号
+      seat.dataset.number = seatCounter; 
       seat.innerHTML = "<small>" + seatCounter + "</small>";
       seatCounter++;
 
@@ -60,35 +60,31 @@ function assignSeats() {
   const fixed20Name = "黄伟杰";
   const fixed42Name = "颜兀钤";
 
-  // 如果名单里没有这两个人，就帮你自动加进去（防呆）
+  
   if (!names.includes(fixed20Name)) names.push(fixed20Name);
   if (!names.includes(fixed42Name)) names.push(fixed42Name);
 
-  // 其他人名单
+ 
   let others = names.filter(n => n !== fixed20Name && n !== fixed42Name);
 
-  // 重置座位显示
   seatElements.forEach(seat => {
     seat.innerHTML = "<small>" + seat.dataset.number + "</small>";
     seat.classList.remove("filled");
   });
 
-  // 选一对真正相邻的 seat 来当 20 和 42 的位置
-  // 这里我选的是「原本编号 19 和 20」这一对，它们在同一个 block 里面是左右相邻
+
   const realSeat19 = seatElements.find(seat => seat.dataset.number == 19);
   const realSeat20 = seatElements.find(seat => seat.dataset.number == 20);
 
-  // 左边显示 20，右边显示 42（你可以反过来，如果你要）
   realSeat19.innerHTML = "<small>20</small><br>" + fixed20Name;
   realSeat20.innerHTML = "<small>42</small><br>" + fixed42Name;
   realSeat19.classList.add("filled");
   realSeat20.classList.add("filled");
 
-  // 把这两个位置从可用座位里排除
   const blockedSeats = new Set([realSeat19, realSeat20]);
   const availableSeats = seatElements.filter(seat => !blockedSeats.has(seat));
 
-  // 随机分配其他人
+
   let shuffledSeats = shuffle([...availableSeats]).slice(0, others.length);
   let shuffledNames = shuffle([...others]);
 
