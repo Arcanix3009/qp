@@ -50,7 +50,7 @@ button:hover {
 
 .row {
   display: flex;
-  gap: 24px; /* more space between blocks */
+  gap: 24px;
   justify-content: center;
 }
 
@@ -85,16 +85,21 @@ button:hover {
   background: #e74c3c;
   color: white;
 }
+
+.paired {
+  background: #3498db !important; /* 42和20用蓝色高亮，表示配对 */
+  color: white;
+  border: 2px solid #2980b9;
+}
 </style>
 </head>
 
 <body>
-
 <h1>macee attackkk!</h1>
 
 <p>Names (one per line):</p>
-<textarea id="names"></textarea>
-<br>
+<textarea id="names" placeholder="Enter names (42 & 20 will always sit together)"></textarea>
+
 <button onclick="assignSeats()">fate</button>
 
 <div class="classroom" id="classroom"></div>
@@ -103,16 +108,6 @@ button:hover {
 const classroomDiv = document.getElementById("classroom");
 let seatElements = [];
 let seatCounter = 1;
-
-/*
-Exact Layout:
-
-Row 1–4:
-ss  sss  sss  ss
-
-Row 5:
-ss  ss  ss  ss
-*/
 
 const layouts = [
   [2,3,3,2],
@@ -163,27 +158,46 @@ function assignSeats() {
   }
 
   let names = input.split("\n").map(n => n.trim()).filter(n => n);
-
   if (names.length > seatElements.length) {
     alert("Too many students!");
     return;
   }
 
+  // 重置所有座位
   seatElements.forEach(seat => {
     seat.innerHTML = "<small>" + seat.dataset.number + "</small>";
-    seat.classList.remove("filled");
+    seat.classList.remove("filled", "paired");
   });
 
-  let shuffledSeats = shuffle([...seatElements]);
+  // 找到固定座位：42号和20号
+  const seat42 = seatElements.find(seat => seat.dataset.number == 42);
+  const seat20 = seatElements.find(seat => seat.dataset.number == 20);
+
+  // 随机选择2个学生给固定座位对
   let shuffledNames = shuffle([...names]);
+  const pairNames = shuffledNames.splice(0, 2); // 取前2个做配对
+
+  // 固定分配到42和20（顺序随机）
+  if (Math.random() > 0.5) {
+    seat42.innerHTML = `<small>42</small><br>${pairNames[0]}`;
+    seat20.innerHTML = `<small>20</small><br>${pairNames[1]}`;
+  } else {
+    seat42.innerHTML = `<small>42</small><br>${pairNames[1]}`;
+    seat20.innerHTML = `<small>20</small><br>${pairNames[0]}`;
+  }
+  
+  seat42.classList.add("filled", "paired");
+  seat20.classList.add("filled", "paired");
+
+  // 剩余学生随机分配到剩余座位
+  const availableSeats = seatElements.filter(seat => seat.dataset.number != 42 && seat.dataset.number != 20);
+  let shuffledSeats = shuffle([...availableSeats]).slice(0, shuffledNames.length);
 
   shuffledNames.forEach((name, i) => {
-    shuffledSeats[i].innerHTML =
-      "<small>" + shuffledSeats[i].dataset.number + "</small><br>" + name;
+    shuffledSeats[i].innerHTML = `<small>${shuffledSeats[i].dataset.number}</small><br>${name}`;
     shuffledSeats[i].classList.add("filled");
   });
 }
 </script>
-
 </body>
 </html>
