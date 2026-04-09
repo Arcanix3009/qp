@@ -156,15 +156,20 @@ function shuffle(array) {
 
 // find adjacent seats
 function findAdjacentSeats() {
+  let allPairs = [];
+
   for (let row of classroomDiv.children) {
     for (let block of row.children) {
       let seats = Array.from(block.children);
       for (let i = 0; i < seats.length - 1; i++) {
-        return [seats[i], seats[i + 1]];
+        allPairs.push([seats[i], seats[i + 1]]);
       }
     }
   }
-  return null;
+
+  if (allPairs.length === 0) return null;
+
+  return allPairs[Math.floor(Math.random() * allPairs.length)];
 }
 
 // main function
