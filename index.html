@@ -1,109 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>s3sf</title>
-
-<style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 20px;
-  background: #f4f6f8;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-textarea {
-  width: 320px;
-  height: 120px;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-  resize: none;
-}
-
-button {
-  margin-top: 10px;
-  padding: 10px 20px;
-  font-size: 16px;
-  border: none;
-  border-radius: 10px;
-  background: #2ecc71;
-  color: white;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #27ae60;
-}
-
-.classroom {
-  margin-top: 30px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.row {
-  display: flex;
-  gap: 24px;
-  justify-content: center;
-}
-
-.block {
-  display: grid;
-  gap: 6px;
-}
-
-.block-2 { grid-template-columns: repeat(2, 50px); }
-.block-3 { grid-template-columns: repeat(3, 50px); }
-
-.seat {
-  width: 50px;
-  height: 50px;
-  background: #dfe6e9;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  text-align: center;
-  padding: 3px;
-}
-
-.seat small {
-  font-size: 8px;
-  opacity: 0.6;
-}
-
-.filled {
-  background: #e74c3c;
-  color: white;
-}
-
-.paired {
-  background: #3498db !important; /* 42和20用蓝色高亮，表示配对 */
-  color: white;
-  border: 2px solid #2980b9;
-}
-</style>
-</head>
-
-<body>
-<h1>macee attackkk!</h1>
-
-<p>Names (one per line):</p>
-<textarea id="names" placeholder="Enter names (42 & 20 will always sit together)"></textarea>
-
-<button onclick="assignSeats()">fate</button>
-
-<div class="classroom" id="classroom"></div>
-
 <script>
 const classroomDiv = document.getElementById("classroom");
 let seatElements = [];
@@ -128,7 +22,7 @@ layouts.forEach(rowLayout => {
     for (let i = 0; i < size; i++) {
       const seat = document.createElement("div");
       seat.className = "seat";
-      seat.dataset.number = seatCounter;
+      seat.dataset.number = seatCounter; // 原始顺序编号
       seat.innerHTML = "<small>" + seatCounter + "</small>";
       seatCounter++;
 
@@ -163,41 +57,45 @@ function assignSeats() {
     return;
   }
 
-  // 重置所有座位
+  const fixed20Name = "黄伟杰";
+  const fixed42Name = "颜兀钤";
+
+  // 如果名单里没有这两个人，就帮你自动加进去（防呆）
+  if (!names.includes(fixed20Name)) names.push(fixed20Name);
+  if (!names.includes(fixed42Name)) names.push(fixed42Name);
+
+  // 其他人名单
+  let others = names.filter(n => n !== fixed20Name && n !== fixed42Name);
+
+  // 重置座位显示
   seatElements.forEach(seat => {
     seat.innerHTML = "<small>" + seat.dataset.number + "</small>";
-    seat.classList.remove("filled", "paired");
+    seat.classList.remove("filled");
   });
 
-  // 找到固定座位：42号和20号
-  const seat42 = seatElements.find(seat => seat.dataset.number == 42);
-  const seat20 = seatElements.find(seat => seat.dataset.number == 20);
+  // 选一对真正相邻的 seat 来当 20 和 42 的位置
+  // 这里我选的是「原本编号 19 和 20」这一对，它们在同一个 block 里面是左右相邻
+  const realSeat19 = seatElements.find(seat => seat.dataset.number == 19);
+  const realSeat20 = seatElements.find(seat => seat.dataset.number == 20);
 
-  // 随机选择2个学生给固定座位对
-  let shuffledNames = shuffle([...names]);
-  const pairNames = shuffledNames.splice(0, 2); // 取前2个做配对
+  // 左边显示 20，右边显示 42（你可以反过来，如果你要）
+  realSeat19.innerHTML = "<small>20</small><br>" + fixed20Name;
+  realSeat20.innerHTML = "<small>42</small><br>" + fixed42Name;
+  realSeat19.classList.add("filled");
+  realSeat20.classList.add("filled");
 
-  // 固定分配到42和20（顺序随机）
-  if (Math.random() > 0.5) {
-    seat42.innerHTML = `<small>42</small><br>${pairNames[0]}`;
-    seat20.innerHTML = `<small>20</small><br>${pairNames[1]}`;
-  } else {
-    seat42.innerHTML = `<small>42</small><br>${pairNames[1]}`;
-    seat20.innerHTML = `<small>20</small><br>${pairNames[0]}`;
-  }
-  
-  seat42.classList.add("filled", "paired");
-  seat20.classList.add("filled", "paired");
+  // 把这两个位置从可用座位里排除
+  const blockedSeats = new Set([realSeat19, realSeat20]);
+  const availableSeats = seatElements.filter(seat => !blockedSeats.has(seat));
 
-  // 剩余学生随机分配到剩余座位
-  const availableSeats = seatElements.filter(seat => seat.dataset.number != 42 && seat.dataset.number != 20);
-  let shuffledSeats = shuffle([...availableSeats]).slice(0, shuffledNames.length);
+  // 随机分配其他人
+  let shuffledSeats = shuffle([...availableSeats]).slice(0, others.length);
+  let shuffledNames = shuffle([...others]);
 
   shuffledNames.forEach((name, i) => {
-    shuffledSeats[i].innerHTML = `<small>${shuffledSeats[i].dataset.number}</small><br>${name}`;
-    shuffledSeats[i].classList.add("filled");
+    const s = shuffledSeats[i];
+    s.innerHTML = "<small>" + s.dataset.number + "</small><br>" + name;
+    s.classList.add("filled");
   });
 }
 </script>
-</body>
-</html>
