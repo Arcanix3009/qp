@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,7 +51,7 @@ button:hover {
 
 .row {
   display: flex;
-  gap: 24px;
+  gap: 24px; /* more space between blocks */
   justify-content: center;
 }
 
@@ -104,11 +105,16 @@ const classroomDiv = document.getElementById("classroom");
 let seatElements = [];
 let seatCounter = 1;
 
-// rules
-const pairNames = ["20 黄伟杰", "42 颜兀钤"];
-const lastRowName = "02 刘献聪";
+/*
+Exact Layout:
 
-// layout
+Row 1–4:
+ss  sss  sss  ss
+
+Row 5:
+ss  ss  ss  ss
+*/
+
 const layouts = [
   [2,3,3,2],
   [2,3,3,2],
@@ -142,7 +148,6 @@ layouts.forEach(rowLayout => {
   classroomDiv.appendChild(row);
 });
 
-// shuffle
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -151,36 +156,6 @@ function shuffle(array) {
   return array;
 }
 
-// random adjacent seats
-function findAdjacentSeats() {
-  let allPairs = [];
-
-  for (let row of classroomDiv.children) {
-    for (let block of row.children) {
-      let seats = Array.from(block.children);
-      for (let i = 0; i < seats.length - 1; i++) {
-        allPairs.push([seats[i], seats[i + 1]]);
-      }
-    }
-  }
-
-  if (allPairs.length === 0) return null;
-  return allPairs[Math.floor(Math.random() * allPairs.length)];
-}
-
-// last row seats
-function getLastRowSeats() {
-  let lastRow = classroomDiv.children[classroomDiv.children.length - 1];
-  let seats = [];
-
-  for (let block of lastRow.children) {
-    seats.push(...Array.from(block.children));
-  }
-
-  return seats;
-}
-
-// main
 function assignSeats() {
   const input = document.getElementById("names").value.trim();
   if (!input) {
@@ -195,55 +170,18 @@ function assignSeats() {
     return;
   }
 
-  // reset
   seatElements.forEach(seat => {
     seat.innerHTML = "<small>" + seat.dataset.number + "</small>";
     seat.classList.remove("filled");
   });
 
-  let remainingNames = [...names];
-  let availableSeats = shuffle([...seatElements]);
-
-  // 1️⃣ last row rule
-  if (remainingNames.includes(lastRowName)) {
-    let lastRowSeats = shuffle(getLastRowSeats());
-    let chosenSeat = lastRowSeats[0];
-
-    chosenSeat.innerHTML =
-      "<small>" + chosenSeat.dataset.number + "</small><br>" + lastRowName;
-    chosenSeat.classList.add("filled");
-
-    remainingNames = remainingNames.filter(n => n !== lastRowName);
-    availableSeats = availableSeats.filter(s => s !== chosenSeat);
-  }
-
-  // 2️⃣ pair rule
-  let pair = pairNames.filter(name => remainingNames.includes(name));
-
-  if (pair.length === 2) {
-    let adjacent = findAdjacentSeats();
-
-    if (adjacent) {
-      pair = shuffle([...pair]);
-
-      adjacent.forEach((seat, i) => {
-        seat.innerHTML =
-          "<small>" + seat.dataset.number + "</small><br>" + pair[i];
-        seat.classList.add("filled");
-      });
-
-      remainingNames = remainingNames.filter(n => !pair.includes(n));
-      availableSeats = availableSeats.filter(s => !adjacent.includes(s));
-    }
-  }
-
-  // 3️⃣ rest random
-  let shuffledNames = shuffle([...remainingNames]);
+  let shuffledSeats = shuffle([...seatElements]);
+  let shuffledNames = shuffle([...names]);
 
   shuffledNames.forEach((name, i) => {
-    availableSeats[i].innerHTML =
-      "<small>" + availableSeats[i].dataset.number + "</small><br>" + name;
-    availableSeats[i].classList.add("filled");
+    shuffledSeats[i].innerHTML =
+      "<small>" + shuffledSeats[i].dataset.number + "</small><br>" + name;
+    shuffledSeats[i].classList.add("filled");
   });
 }
 </script>
