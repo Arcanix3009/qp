@@ -176,13 +176,66 @@ function assignSeats() {
   });
 
   let shuffledSeats = shuffle([...seatElements]);
-  let shuffledNames = shuffle([...names]);
+let shuffledNames = shuffle([...names]);
 
-  shuffledNames.forEach((name, i) => {
-    shuffledSeats[i].innerHTML =
-      "<small>" + shuffledSeats[i].dataset.number + "</small><br>" + name;
-    shuffledSeats[i].classList.add("filled");
-  });
+// ===== 固定一起坐的组 =====
+const groups = [
+  ["马梓杰", "叶子峰", "黄伟杰"],
+  ["林双", "郑婕妤", "甘欣仪"]
+];
+
+// 移除这些名字，避免重复
+groups.flat().forEach(name => {
+  shuffledNames = shuffledNames.filter(n => n !== name);
+});
+
+// 找连续座位
+function findConsecutiveSeats(count) {
+  for (let i = 0; i <= shuffledSeats.length - count; i++) {
+    let valid = true;
+
+    for (let j = 1; j < count; j++) {
+      const current =
+        parseInt(shuffledSeats[i + j].dataset.number);
+
+      const previous =
+        parseInt(shuffledSeats[i + j - 1].dataset.number);
+
+      if (current !== previous + 1) {
+        valid = false;
+        break;
+      }
+    }
+
+    if (valid) {
+      return shuffledSeats.splice(i, count);
+    }
+  }
+
+  return null;
+}
+
+// 安排固定组
+groups.forEach(group => {
+  const seats = findConsecutiveSeats(group.length);
+
+  if (seats) {
+    group.forEach((name, index) => {
+      seats[index].innerHTML =
+        "<small>" + seats[index].dataset.number + "</small><br>" + name;
+
+      seats[index].classList.add("filled");
+    });
+  }
+});
+
+// 剩余学生随机
+shuffledNames.forEach((name, i) => {
+  shuffledSeats[i].innerHTML =
+    "<small>" + shuffledSeats[i].dataset.number + "</small><br>" + name;
+
+  shuffledSeats[i].classList.add("filled");
+});
 }
 </script>
 
