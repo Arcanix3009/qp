@@ -158,86 +158,100 @@ function shuffle(array) {
 
 function assignSeats() {
   const input = document.getElementById("names").value.trim();
+
   if (!input) {
     alert("Enter student names first.");
     return;
   }
 
-  let names = input.split("\n").map(n => n.trim()).filter(n => n);
+  let names = input
+    .split("\n")
+    .map(n => n.trim())
+    .filter(n => n);
 
   if (names.length > seatElements.length) {
     alert("Too many students!");
     return;
   }
 
+  // 清空座位
   seatElements.forEach(seat => {
-    seat.innerHTML = "<small>" + seat.dataset.number + "</small>";
+    seat.innerHTML =
+      "<small>" + seat.dataset.number + "</small>";
     seat.classList.remove("filled");
   });
 
   let shuffledSeats = shuffle([...seatElements]);
-let shuffledNames = shuffle([...names]);
+  let shuffledNames = shuffle([...names]);
 
-// ===== 固定一起坐的组 =====
-const groups = [
-  ["马梓杰", "叶子峰", "黄伟杰"],
-  ["林双", "郑婕妤", "甘欣仪"]
-];
+  // ===== 特殊规则：20 和 49 必须坐一起 =====
+  const pair = ["20", "49"];
 
-// 移除这些名字，避免重复
-groups.flat().forEach(name => {
-  shuffledNames = shuffledNames.filter(n => n !== name);
-});
+  const has20 = shuffledNames.includes("20");
+  const has49 = shuffledNames.includes("49");
 
-// 找连续座位
-function findConsecutiveSeats(count) {
-  for (let i = 0; i <= shuffledSeats.length - count; i++) {
-    let valid = true;
+  if (has20 && has49) {
 
-    for (let j = 1; j < count; j++) {
+    // 从名单移除
+    shuffledNames = shuffledNames.filter(
+      n => n !== "20" && n !== "49"
+    );
+
+    // 找连续座位
+    let pairSeats = null;
+
+    for (let i = 0; i < shuffledSeats.length - 1; i++) {
+
       const current =
-        parseInt(shuffledSeats[i + j].dataset.number);
+        parseInt(shuffledSeats[i].dataset.number);
 
-      const previous =
-        parseInt(shuffledSeats[i + j - 1].dataset.number);
+      const next =
+        parseInt(shuffledSeats[i + 1].dataset.number);
 
-      if (current !== previous + 1) {
-        valid = false;
+      if (next === current + 1) {
+        pairSeats = shuffledSeats.splice(i, 2);
         break;
       }
     }
 
-    if (valid) {
-      return shuffledSeats.splice(i, count);
+    // 放入20和49
+    if (pairSeats) {
+
+      // 随机决定谁坐左边谁坐右边
+      const pairOrder =
+        Math.random() < 0.5
+          ? ["20", "49"]
+          : ["49", "20"];
+
+      pairSeats[0].innerHTML =
+        "<small>" +
+        pairSeats[0].dataset.number +
+        "</small><br>" +
+        pairOrder[0];
+
+      pairSeats[1].innerHTML =
+        "<small>" +
+        pairSeats[1].dataset.number +
+        "</small><br>" +
+        pairOrder[1];
+
+      pairSeats[0].classList.add("filled");
+      pairSeats[1].classList.add("filled");
     }
   }
 
-  return null;
+  // ===== 剩余学生随机 =====
+  shuffledNames.forEach((name, i) => {
+
+    if (!shuffledSeats[i]) return;
+
+    shuffledSeats[i].innerHTML =
+      "<small>" +
+      shuffledSeats[i].dataset.number +
+      "</small><br>" +
+      name;
+
+    shuffledSeats[i].classList.add("filled");
+  });
 }
-
-// 安排固定组
-groups.forEach(group => {
-  const seats = findConsecutiveSeats(group.length);
-
-  if (seats) {
-    group.forEach((name, index) => {
-      seats[index].innerHTML =
-        "<small>" + seats[index].dataset.number + "</small><br>" + name;
-
-      seats[index].classList.add("filled");
-    });
-  }
-});
-
-// 剩余学生随机
-shuffledNames.forEach((name, i) => {
-  shuffledSeats[i].innerHTML =
-    "<small>" + shuffledSeats[i].dataset.number + "</small><br>" + name;
-
-  shuffledSeats[i].classList.add("filled");
-});
-}
-</script>
-
-</body>
 </html>
