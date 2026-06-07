@@ -174,89 +174,63 @@ function assignSeats() {
     return;
   }
 
-  // 清空所有座位
+  // Clear seats
   seatElements.forEach(seat => {
-    seat.innerHTML =
-      "<small>" + seat.dataset.number + "</small>";
+    seat.innerHTML = "<small>" + seat.dataset.number + "</small>";
     seat.classList.remove("filled");
   });
 
-  let shuffledNames = shuffle([...names]);
+  // Remove 20 and 49 from normal shuffle
+  let remainingNames = names.filter(
+    n => n !== "20" && n !== "49"
+  );
 
-  // 可用座位
-  let availableSeats = [...seatElements];
+  // Build row seat lists
+  const rows = [];
+  let index = 0;
 
-  // ===== 特殊规则：20 和 49 必须坐一起 =====
-  const pair = ["20", "49"];
+  layouts.forEach(rowLayout => {
+    const rowSeats = [];
 
-  if (
-    shuffledNames.includes("20") &&
-    shuffledNames.includes("49")
-  ) {
-
-    // 从随机名单移除
-    shuffledNames = shuffledNames.filter(
-      n => n !== "20" && n !== "49"
-    );
-
-    // 找所有连续座位组合
-    const consecutivePairs = [];
-
-    for (let i = 0; i < seatElements.length - 1; i++) {
-
-      const current =
-        parseInt(seatElements[i].dataset.number);
-
-      const next =
-        parseInt(seatElements[i + 1].dataset.number);
-
-      if (next === current + 1) {
-        consecutivePairs.push([
-          seatElements[i],
-          seatElements[i + 1]
-        ]);
+    rowLayout.forEach(size => {
+      for (let i = 0; i < size; i++) {
+        rowSeats.push(seatElements[index]);
+        index++;
       }
-    }
+    });
 
-    // 随机选择一组连续座位
-    if (consecutivePairs.length > 0) {
+    rows.push(rowSeats);
+  });
 
-      const chosen =
-        consecutivePairs[
-          Math.floor(
-            Math.random() * consecutivePairs.length
-          )
-        ];
+  // Pick a random row for 20 & 49
+  const chosenRow =
+    rows[Math.floor(Math.random() * rows.length)];
 
-      const pairOrder =
-        Math.random() < 0.5
-          ? ["20", "49"]
-          : ["49", "20"];
+  const shuffledRow = shuffle([...chosenRow]);
 
-      chosen[0].innerHTML =
-        `<small>${chosen[0].dataset.number}</small><br>${pairOrder[0]}`;
+  const seat20 = shuffledRow[0];
+  const seat49 = shuffledRow[1];
 
-      chosen[1].innerHTML =
-        `<small>${chosen[1].dataset.number}</small><br>${pairOrder[1]}`;
+  // Put 20 and 49 there
+  seat20.innerHTML =
+    `<small>${seat20.dataset.number}</small><br>20`;
 
-      chosen[0].classList.add("filled");
-      chosen[1].classList.add("filled");
+  seat49.innerHTML =
+    `<small>${seat49.dataset.number}</small><br>49`;
 
-      // 从可用座位移除
-      availableSeats = availableSeats.filter(
-        seat =>
-          seat !== chosen[0] &&
-          seat !== chosen[1]
-      );
-    }
-  }
+  seat20.classList.add("filled");
+  seat49.classList.add("filled");
 
-  // 随机剩余座位
-  availableSeats = shuffle(availableSeats);
+  // Remaining seats
+  let availableSeats = seatElements.filter(
+    seat => seat !== seat20 && seat !== seat49
+  );
 
-  // 分配剩余学生
-  shuffledNames.forEach((name, i) => {
+  shuffle(availableSeats);
+  shuffle(remainingNames);
 
+  // Assign everyone else
+  remainingNames.forEach((name, i) => {
     if (!availableSeats[i]) return;
 
     availableSeats[i].innerHTML =
