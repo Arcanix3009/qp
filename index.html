@@ -169,7 +169,7 @@ function assignSeats() {
     seat.classList.remove("filled");
   });
 
-  // Students that must sit together
+  
   const pairA = "20";
   const pairB = "49";
 
@@ -177,7 +177,7 @@ function assignSeats() {
     n => n !== pairA && n !== pairB
   );
 
-  // Physical desk pairs in your layout
+  
   const deskPairs = [
   [1,2],
   [3,4],[4,5],
@@ -205,7 +205,7 @@ function assignSeats() {
   [47,48]
   ];
 
-  // Pick random desk pair
+  
   const randomPair =
     deskPairs[Math.floor(Math.random() * deskPairs.length)];
 
@@ -217,7 +217,7 @@ function assignSeats() {
     s => Number(s.dataset.number) === randomPair[1]
   );
 
-  // Assign 20 and 49
+  
   seatA.innerHTML =
     "<small>" + seatA.dataset.number +
     "</small><br>" + pairA;
@@ -229,7 +229,7 @@ function assignSeats() {
   seatA.classList.add("filled");
   seatB.classList.add("filled");
 
-  // Remaining seats
+  
   let remainingSeats = seatElements.filter(
     s => s !== seatA && s !== seatB
   );
