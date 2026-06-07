@@ -174,63 +174,81 @@ function assignSeats() {
     return;
   }
 
-  // Clear seats
+  // 清空座位
   seatElements.forEach(seat => {
-    seat.innerHTML = "<small>" + seat.dataset.number + "</small>";
+    seat.innerHTML =
+      "<small>" + seat.dataset.number + "</small>";
     seat.classList.remove("filled");
   });
 
-  // Remove 20 and 49 from normal shuffle
+  // 移除20和49
   let remainingNames = names.filter(
     n => n !== "20" && n !== "49"
   );
 
-  // Build row seat lists
+  // ===== 建立每排座位 =====
   const rows = [];
-  let index = 0;
+  let seatIndex = 0;
 
   layouts.forEach(rowLayout => {
     const rowSeats = [];
 
     rowLayout.forEach(size => {
       for (let i = 0; i < size; i++) {
-        rowSeats.push(seatElements[index]);
-        index++;
+        rowSeats.push(seatElements[seatIndex]);
+        seatIndex++;
       }
     });
 
     rows.push(rowSeats);
   });
 
-  // Pick a random row for 20 & 49
-  const chosenRow =
-    rows[Math.floor(Math.random() * rows.length)];
+  // ===== 找所有相邻座位 =====
+  const adjacentPairs = [];
 
-  const shuffledRow = shuffle([...chosenRow]);
+  rows.forEach(row => {
+    for (let i = 0; i < row.length - 1; i++) {
+      adjacentPairs.push([
+        row[i],
+        row[i + 1]
+      ]);
+    }
+  });
 
-  const seat20 = shuffledRow[0];
-  const seat49 = shuffledRow[1];
+  // 随机选择一对相邻座位
+  const chosenPair =
+    adjacentPairs[
+      Math.floor(Math.random() * adjacentPairs.length)
+    ];
 
-  // Put 20 and 49 there
-  seat20.innerHTML =
-    `<small>${seat20.dataset.number}</small><br>20`;
+  // 随机决定左右顺序
+  const order =
+    Math.random() < 0.5
+      ? ["20", "49"]
+      : ["49", "20"];
 
-  seat49.innerHTML =
-    `<small>${seat49.dataset.number}</small><br>49`;
+  chosenPair[0].innerHTML =
+    `<small>${chosenPair[0].dataset.number}</small><br>${order[0]}`;
 
-  seat20.classList.add("filled");
-  seat49.classList.add("filled");
+  chosenPair[1].innerHTML =
+    `<small>${chosenPair[1].dataset.number}</small><br>${order[1]}`;
 
-  // Remaining seats
+  chosenPair[0].classList.add("filled");
+  chosenPair[1].classList.add("filled");
+
+  // 剩余座位
   let availableSeats = seatElements.filter(
-    seat => seat !== seat20 && seat !== seat49
+    seat =>
+      seat !== chosenPair[0] &&
+      seat !== chosenPair[1]
   );
 
   shuffle(availableSeats);
   shuffle(remainingNames);
 
-  // Assign everyone else
+  // 分配其他人
   remainingNames.forEach((name, i) => {
+
     if (!availableSeats[i]) return;
 
     availableSeats[i].innerHTML =
@@ -239,4 +257,3 @@ function assignSeats() {
     availableSeats[i].classList.add("filled");
   });
 }
-</html>
