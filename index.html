@@ -169,7 +169,7 @@ function assignSeats() {
     seat.classList.remove("filled");
   });
 
-  // Student names that must sit together
+  // Students that must sit together
   const pairA = "20";
   const pairB = "49";
 
@@ -177,40 +177,79 @@ function assignSeats() {
     n => n !== pairA && n !== pairB
   );
 
-  const shuffledSeats = shuffle([...seatElements]);
+  // Physical desk pairs in your layout
+  const deskPairs = [
+    [1,2],
+    [3,4],
+    [6,7],
+    [9,10],
 
-  // Random adjacent location
-  const pairIndex = Math.floor(
-    Math.random() * (shuffledSeats.length - 1)
+    [11,12],
+    [13,14],
+    [16,17],
+    [19,20],
+
+    [21,22],
+    [23,24],
+    [26,27],
+    [29,30],
+
+    [31,32],
+    [33,34],
+    [36,37],
+    [39,40],
+
+    [41,42],
+    [43,44],
+    [45,46],
+    [47,48]
+  ];
+
+  // Pick random desk pair
+  const randomPair =
+    deskPairs[Math.floor(Math.random() * deskPairs.length)];
+
+  const seatA = seatElements.find(
+    s => Number(s.dataset.number) === randomPair[0]
   );
 
-  const seatA = shuffledSeats[pairIndex];
-  const seatB = shuffledSeats[pairIndex + 1];
+  const seatB = seatElements.find(
+    s => Number(s.dataset.number) === randomPair[1]
+  );
 
+  // Assign 20 and 49
   seatA.innerHTML =
-    "<small>" + seatA.dataset.number + "</small><br>" + pairA;
+    "<small>" + seatA.dataset.number +
+    "</small><br>" + pairA;
 
   seatB.innerHTML =
-    "<small>" + seatB.dataset.number + "</small><br>" + pairB;
+    "<small>" + seatB.dataset.number +
+    "</small><br>" + pairB;
 
   seatA.classList.add("filled");
   seatB.classList.add("filled");
 
-  shuffledSeats.splice(pairIndex, 2);
+  // Remaining seats
+  let remainingSeats = seatElements.filter(
+    s => s !== seatA && s !== seatB
+  );
 
-  const shuffledNames = shuffle([...names]);
+  remainingSeats = shuffle([...remainingSeats]);
+
+  let shuffledNames = shuffle([...names]);
 
   shuffledNames.forEach((name, i) => {
-    if (!shuffledSeats[i]) return;
+    if (!remainingSeats[i]) return;
 
-    shuffledSeats[i].innerHTML =
+    remainingSeats[i].innerHTML =
       "<small>" +
-      shuffledSeats[i].dataset.number +
+      remainingSeats[i].dataset.number +
       "</small><br>" +
       name;
 
-    shuffledSeats[i].classList.add("filled");
+    remainingSeats[i].classList.add("filled");
   });
+}
 }
 </script>
 
