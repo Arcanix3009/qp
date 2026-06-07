@@ -59,13 +59,8 @@ button:hover {
   gap: 6px;
 }
 
-.block-2 {
-  grid-template-columns: repeat(2, 50px);
-}
-
-.block-3 {
-  grid-template-columns: repeat(3, 50px);
-}
+.block-2 { grid-template-columns: repeat(2, 50px); }
+.block-3 { grid-template-columns: repeat(3, 50px); }
 
 .seat {
   width: 50px;
@@ -109,15 +104,6 @@ const classroomDiv = document.getElementById("classroom");
 let seatElements = [];
 let seatCounter = 1;
 
-/*
-Layout:
-Row 1–4:
-ss  sss  sss  ss
-
-Row 5:
-ss  ss  ss  ss
-*/
-
 const layouts = [
   [2,3,3,2],
   [2,3,3,2],
@@ -154,10 +140,8 @@ layouts.forEach(rowLayout => {
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-
     [array[i], array[j]] = [array[j], array[i]];
   }
-
   return array;
 }
 
@@ -182,90 +166,51 @@ function assignSeats() {
   seatElements.forEach(seat => {
     seat.innerHTML =
       "<small>" + seat.dataset.number + "</small>";
-
     seat.classList.remove("filled");
   });
 
-  let shuffledSeats = shuffle([...seatElements]);
-  let shuffledNames = shuffle([...names]);
+  // Student names that must sit together
+  const pairA = "20";
+  const pairB = "49";
 
-  
-const groups = [
-  ["20", "49"]
-];
+  names = names.filter(
+    n => n !== pairA && n !== pairB
+  );
 
-// Remove group members from random pool
-groups.flat().forEach(name => {
-  shuffledNames = shuffledNames.filter(n => n !== name);
-});
+  const shuffledSeats = shuffle([...seatElements]);
 
-// Adjacent seat pairs
-const adjacentPairs = [
-  [1,2],[3,4],[5,6],[7,8],[9,10],
-  [11,12],[13,14],[15,16],[17,18],[19,20],
-  [21,22],[23,24],[25,26],[27,28],[29,30],
-  [31,32],[33,34],[35,36],[37,38],[39,40],
-  [41,42],[43,44],[45,46],[47,48]
-];
+  // Random adjacent location
+  const pairIndex = Math.floor(
+    Math.random() * (shuffledSeats.length - 1)
+  );
 
-// Pick a random adjacent pair
-function findAdjacentSeats() {
-  const shuffledPairs = [...adjacentPairs];
+  const seatA = shuffledSeats[pairIndex];
+  const seatB = shuffledSeats[pairIndex + 1];
 
-  for (let i = shuffledPairs.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledPairs[i], shuffledPairs[j]] =
-    [shuffledPairs[j], shuffledPairs[i]];
-  }
+  seatA.innerHTML =
+    "<small>" + seatA.dataset.number + "</small><br>" + pairA;
 
-  for (const pair of shuffledPairs) {
-    const seats = pair.map(num =>
-      shuffledSeats.find(
-        s => parseInt(s.dataset.number) === num
-      )
-    );
+  seatB.innerHTML =
+    "<small>" + seatB.dataset.number + "</small><br>" + pairB;
 
-    if (seats.every(Boolean)) {
-      shuffledSeats = shuffledSeats.filter(
-        s => !pair.includes(parseInt(s.dataset.number))
-      );
+  seatA.classList.add("filled");
+  seatB.classList.add("filled");
 
-      return seats;
-    }
-  }
+  shuffledSeats.splice(pairIndex, 2);
 
-  return null;
-}
+  const shuffledNames = shuffle([...names]);
 
-// Place fixed groups first
-groups.forEach(group => {
-  const seats = findAdjacentSeats();
+  shuffledNames.forEach((name, i) => {
+    if (!shuffledSeats[i]) return;
 
-  if (seats) {
-    group.forEach((name, index) => {
-      seats[index].innerHTML =
-        "<small>" +
-        seats[index].dataset.number +
-        "</small><br>" +
-        name;
+    shuffledSeats[i].innerHTML =
+      "<small>" +
+      shuffledSeats[i].dataset.number +
+      "</small><br>" +
+      name;
 
-      seats[index].classList.add("filled");
-    });
-  }
-});
-
-// Place everyone else randomly
-shuffledNames.forEach((name, i) => {
-  if (!shuffledSeats[i]) return;
-
-  shuffledSeats[i].innerHTML =
-    "<small>" +
-    shuffledSeats[i].dataset.number +
-    "</small><br>" +
-    name;
-
-  shuffledSeats[i].classList.add("filled");
-});
+    shuffledSeats[i].classList.add("filled");
+  });
 }
 </script>
 
